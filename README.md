@@ -4,7 +4,7 @@ Decentralized, sequential, lexicographically sortable unique id
 
 **This is a work in progress, things might change quickly without notice**
 
-# Features
+## Features
 
 * 128 bit
 * Lexicographically sortable
@@ -12,13 +12,13 @@ Decentralized, sequential, lexicographically sortable unique id
 * 1.21e+24 unique ids per millisecond
 * 2.81e+14 unique ids per worker per millisecond
 
-# Install/Update
+## Install/Update
 
 ```bash
 go get -u github.com/celrenheit/sandflake
 ```
 
-# Usage
+## Usage
 
 ```go
 var g sandflake.Generator
@@ -26,7 +26,7 @@ id := g.Next()
 fmt.Println(id)
 ```
 
-# Composition
+## Composition
 
 * 48 bit: timestamp in milliseconds
 * 32 bit: worker id (random at initialization)
@@ -37,11 +37,11 @@ Sandflake ids do not need to wait some milliseconds for the next id if time goes
 
 Likewise, for future manually generated ids, the order is not guaranteed.
 
-# Inspiration
+## Inspiration
 
 * [twitter/snowflake](https://github.com/twitter/snowflake)
 * [alizan/ulid](https://github.com/alizain/ulid) and [oklog/ulid](https://github.com/oklog/ulid)
 
-# License
+## License
 
 Apache 2.0
