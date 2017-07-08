@@ -12,6 +12,21 @@ Decentralized, sequential, lexicographically sortable unique id
 * 1.21e+24 unique ids per millisecond
 * 2.81e+14 unique ids per worker per millisecond
 
+
+## Table of contents
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Install/Update](#installupdate)
+- [Usage](#usage)
+- [Composition](#composition)
+- [Inspiration](#inspiration)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## Install/Update
 
 ```bash
