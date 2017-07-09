@@ -27,10 +27,11 @@ import (
 type Generator struct {
 	mu       sync.Mutex
 	workerID WorkerID
-	lastMS   uint64
+	lastTime time.Time
 	sequence uint32
 	once     sync.Once
 	reader   io.Reader
+	clock    clock
 }
 
 // Next returns the next id.
@@ -40,16 +41,18 @@ func (g *Generator) Next() ID {
 	g.once.Do(func() {
 		g.workerID = newWorkerID()
 		g.reader = rand.New(rand.NewSource(time.Now().UnixNano()))
+		if g.clock == nil {
+			g.clock = stdClock{}
+		}
 	})
 
-	now := time.Now().UTC()
-	nowMS := uint64(now.UnixNano() / 1e6)
-
+	now := g.clock.Now().UTC()
 	g.mu.Lock()
-	if nowMS == g.lastMS {
+
+	if sub := now.Sub(g.lastTime); sub >= 0 && sub < time.Millisecond {
 		g.sequence++
 	} else {
-		g.lastMS = nowMS
+		g.lastTime = now
 		g.sequence = 0
 	}
 
@@ -62,5 +65,17 @@ func (g *Generator) Next() ID {
 	seq := g.sequence
 	g.mu.Unlock()
 
-	return NewID(nowMS, wid, seq, g.reader)
+	return NewID(now, wid, seq, g.reader)
 }
+
+type clock interface {
+	Now() time.Time
+}
+
+type stdClock struct{}
+
+func (c stdClock) Now() time.Time { return time.Now() }
+
+type mockClock time.Time
+
+func (t mockClock) Now() time.Time { return time.Time(t) }

@@ -32,17 +32,70 @@ func TestNewID(t *testing.T) {
 	workerID := newWorkerID()
 	var seq uint32 = maxSequence / 2
 	date := time.Date(2017, 5, 27, 0, 0, 0, 20e6, time.UTC)
-	ts := uint64(date.UnixNano() / timeUnit)
 
 	source := rand.New(rand.NewSource(time.Now().UnixNano()))
-	d := NewID(ts, workerID, seq, source)
+	d := NewID(date, workerID, seq, source)
 	fmt.Println(d.String())
 
 	out, err := Parse(d.String())
 	require.Nil(t, err)
-	require.Equal(t, ts, uint64(out.Time().UnixNano()/timeUnit))
+	require.True(t, date.Equal(out.Time()))
 	require.Equal(t, seq, out.Sequence())
 	require.Equal(t, workerID, out.WorkerID())
+}
+
+func TestClockSequences(t *testing.T) {
+	origin := time.Date(2017, 5, 27, 0, 0, 0, 0, time.UTC)
+	var tests = []struct {
+		startTime            time.Time
+		times                []time.Time
+		expectedLastSequence int
+	}{
+		{
+			times: []time.Time{
+				origin,
+				origin.Add(20 * time.Microsecond),
+			},
+			expectedLastSequence: 1,
+		},
+		{
+			times: []time.Time{
+				origin.Add(20 * time.Millisecond),
+				origin,
+			},
+			expectedLastSequence: 0,
+		},
+		{
+			times: []time.Time{
+				origin,
+				origin.Add(1 * time.Millisecond),
+			},
+			expectedLastSequence: 0,
+		},
+		{
+			startTime:            origin,
+			times:                makeTimes(origin, 20, time.Microsecond),
+			expectedLastSequence: 20,
+		},
+		{
+			startTime:            origin,
+			times:                makeTimes(origin, 7, 250*time.Microsecond),
+			expectedLastSequence: 3,
+		},
+	}
+
+	for _, test := range tests {
+		var id ID
+		g := Generator{}
+		if !test.startTime.IsZero() {
+			g.lastTime = test.startTime
+		}
+		for _, t := range test.times {
+			g.clock = mockClock(t)
+			id = g.Next()
+		}
+		require.Equal(t, test.expectedLastSequence, int(id.Sequence()))
+	}
 }
 
 func TestOrdering(t *testing.T) {
@@ -85,4 +138,13 @@ func BenchmarkParseID(b *testing.B) {
 			Parse(idStr)
 		}
 	})
+}
+
+func makeTimes(origin time.Time, n int, space time.Duration) []time.Time {
+	times := make([]time.Time, n)
+	for i := 0; i < n; i++ {
+		times[i] = origin.Add(time.Duration(i+1) * space)
+	}
+
+	return times
 }

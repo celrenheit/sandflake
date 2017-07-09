@@ -67,9 +67,9 @@ var (
 type ID [byteLength]byte
 
 // NewID returns a ID with the provided arguments.
-func NewID(ts uint64, workerID WorkerID, seq uint32, unsaferandom io.Reader) ID {
+func NewID(t time.Time, workerID WorkerID, seq uint32, unsaferandom io.Reader) ID {
 	var d ID
-
+	ts := uint64(t.UnixNano() / timeUnit)
 	d.setTimestamp(ts)
 	copy(d[timestampLength:timestampLength+workerIDLength], workerID[:])
 	d.setSequence(seq)
