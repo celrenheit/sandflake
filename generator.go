@@ -24,6 +24,26 @@ import (
 	"time"
 )
 
+var (
+	WithTime = func(t time.Time) optFn {
+		return func(g *Generator) {
+			g.lastTime = t
+		}
+	}
+
+	WithSequence = func(seq uint32) optFn {
+		return func(g *Generator) {
+			g.sequence = seq
+		}
+	}
+
+	WithWorkerID = func(wid WorkerID) optFn {
+		return func(g *Generator) {
+			g.workerID = wid
+		}
+	}
+)
+
 type Generator struct {
 	mu       sync.Mutex
 	workerID WorkerID
@@ -34,13 +54,27 @@ type Generator struct {
 	clock    clock
 }
 
+type optFn func(*Generator)
+
+func NewGenerator(opts ...optFn) *Generator {
+	g := new(Generator)
+	for _, fn := range opts {
+		fn(g)
+	}
+	return g
+}
+
 // Next returns the next id.
 // It returns an error if New() fails.
 // It is safe for concurrent use.
 func (g *Generator) Next() ID {
 	g.once.Do(func() {
-		g.workerID = newWorkerID()
-		g.reader = rand.New(rand.NewSource(time.Now().UnixNano()))
+		if g.workerID == (WorkerID{}) {
+			g.workerID = newWorkerID()
+		}
+		if g.reader == nil {
+			g.reader = rand.New(rand.NewSource(time.Now().UnixNano()))
+		}
 		if g.clock == nil {
 			g.clock = stdClock{}
 		}
