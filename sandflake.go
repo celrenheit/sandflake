@@ -19,10 +19,8 @@ package sandflake
 
 import (
 	"bytes"
-	securerandom "crypto/rand"
 	"encoding/base32"
 	"fmt"
-	"io"
 	"time"
 )
 
@@ -67,19 +65,13 @@ var (
 type ID [byteLength]byte
 
 // NewID returns a ID with the provided arguments.
-func NewID(t time.Time, workerID WorkerID, seq uint32, unsaferandom io.Reader) ID {
+func NewID(t time.Time, workerID WorkerID, seq uint32, randomBytes []byte) ID {
 	var d ID
 	ts := uint64(t.UnixNano() / timeUnit)
 	d.setTimestamp(ts)
 	copy(d[timestampLength:timestampLength+workerIDLength], workerID[:])
 	d.setSequence(seq)
-	if unsaferandom != nil {
-		// try crypto rand reader
-		if _, err := securerandom.Read(d[randomOffset:]); err != nil {
-			// otherwise fallback to math/crypto reader
-			unsaferandom.Read(d[randomOffset:])
-		}
-	}
+	copy(d[randomOffset:], randomBytes)
 
 	return d
 }

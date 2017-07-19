@@ -18,8 +18,9 @@ limitations under the License.
 package sandflake
 
 import (
+	securerandom "crypto/rand"
 	"io"
-	"math/rand"
+	unsaferandom "math/rand"
 	"sync"
 	"time"
 )
@@ -40,7 +41,7 @@ type Generator struct {
 func (g *Generator) Next() ID {
 	g.once.Do(func() {
 		g.workerID = newWorkerID()
-		g.reader = rand.New(rand.NewSource(time.Now().UnixNano()))
+		g.reader = unsaferandom.New(unsaferandom.NewSource(time.Now().UnixNano()))
 		if g.clock == nil {
 			g.clock = stdClock{}
 		}
@@ -65,7 +66,9 @@ func (g *Generator) Next() ID {
 	seq := g.sequence
 	g.mu.Unlock()
 
-	return NewID(now, wid, seq, g.reader)
+	randomBytes := generateRandomBytes(g.reader)
+
+	return NewID(now, wid, seq, randomBytes)
 }
 
 type clock interface {
@@ -79,3 +82,14 @@ func (c stdClock) Now() time.Time { return time.Now() }
 type mockClock time.Time
 
 func (t mockClock) Now() time.Time { return time.Time(t) }
+
+func generateRandomBytes(unsafereader io.Reader) []byte {
+	randomBytes := make([]byte, 0, randomLength)
+	// try crypto rand reader
+	if _, err := securerandom.Read(randomBytes[:]); err != nil {
+		// otherwise fallback to math/crypto reader
+		unsafereader.Read(randomBytes[:])
+	}
+
+	return randomBytes
+}

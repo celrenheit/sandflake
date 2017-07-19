@@ -34,7 +34,8 @@ func TestNewID(t *testing.T) {
 	date := time.Date(2017, 5, 27, 0, 0, 0, 20e6, time.UTC)
 
 	source := rand.New(rand.NewSource(time.Now().UnixNano()))
-	d := NewID(date, workerID, seq, source)
+	randomBytes := generateRandomBytes(source)
+	d := NewID(date, workerID, seq, randomBytes)
 	fmt.Println(d.String())
 
 	out, err := Parse(d.String())
