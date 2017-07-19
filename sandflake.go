@@ -51,7 +51,8 @@ var (
 
 var (
 	// errors
-	ErrInvalidLength = fmt.Errorf("expected length of id to be %d", encodedLen)
+	ErrInvalidLength      = fmt.Errorf("expected length of id to be %d", encodedLen)
+	ErrInvalidBytesLength = fmt.Errorf("expected length of bytes to be %d", byteLength)
 
 	// encoding
 	encoding     = base32.NewEncoding(alphabet)
@@ -86,10 +87,14 @@ func Parse(str string) (ID, error) {
 	return id, nil
 }
 
-func FromBytes(b []byte) ID {
+func FromBytes(b []byte) (ID, error) {
+	if len(b) != byteLength {
+		return Nil, ErrInvalidBytesLength
+	}
+
 	var id ID
 	copy(id[:], b)
-	return id
+	return id, nil
 }
 
 func (id ID) String() string {
