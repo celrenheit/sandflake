@@ -176,3 +176,31 @@ func (d ID) After(other ID) bool {
 func Compare(id1, id2 ID) int {
 	return bytes.Compare(id1[:], id2[:])
 }
+
+func (d ID) Size() int {
+	return Size
+}
+
+func (d ID) Equal(other ID) bool {
+	return Compare(d, other) == 0
+}
+
+func (d ID) Marshal() ([]byte, error) {
+	return d[:], nil
+}
+
+func (d ID) MarshalTo(dst []byte) (int, error) {
+	copy(dst, d[:])
+	return Size, nil
+}
+
+func (d *ID) Unmarshal(b []byte) error {
+	id, err := FromBytes(b)
+	if err != nil {
+		return err
+	}
+
+	*d = id
+
+	return nil
+}
