@@ -87,7 +87,7 @@ func Parse(str string) (ID, error) {
 	return id, nil
 }
 
-func FromBytes(b []byte) (ID, error) {
+func ParseBytes(b []byte) (ID, error) {
 	if len(b) != Size {
 		return Nil, ErrInvalidBytesLength
 	}
@@ -95,6 +95,24 @@ func FromBytes(b []byte) (ID, error) {
 	var id ID
 	copy(id[:], b)
 	return id, nil
+}
+
+func MustParse(str string) ID {
+	id, err := Parse(str)
+	if err != nil {
+		panic(err)
+	}
+
+	return id
+}
+
+func MustParseBytes(b []byte) ID {
+	id, err := ParseBytes(b)
+	if err != nil {
+		panic(err)
+	}
+
+	return id
 }
 
 func (id ID) String() string {
@@ -195,7 +213,7 @@ func (d ID) MarshalTo(dst []byte) (int, error) {
 }
 
 func (d *ID) Unmarshal(b []byte) error {
-	id, err := FromBytes(b)
+	id, err := ParseBytes(b)
 	if err != nil {
 		return err
 	}
