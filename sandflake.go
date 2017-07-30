@@ -39,7 +39,7 @@ const (
 	sequenceOffset = timestampLength + workerIDLength
 	randomOffset   = sequenceOffset + sequenceLength
 
-	byteLength = timestampLength + workerIDLength + sequenceLength + randomLength
+	Size = timestampLength + workerIDLength + sequenceLength + randomLength
 )
 
 var (
@@ -52,7 +52,7 @@ var (
 var (
 	// errors
 	ErrInvalidLength      = fmt.Errorf("expected length of id to be %d", encodedLen)
-	ErrInvalidBytesLength = fmt.Errorf("expected length of bytes to be %d", byteLength)
+	ErrInvalidBytesLength = fmt.Errorf("expected length of bytes to be %d", Size)
 
 	// encoding
 	encoding     = base32.NewEncoding(alphabet)
@@ -63,7 +63,7 @@ var (
 // 32bit: worker id (defaults to MAC Address)
 // 24bit: sequence number
 // 24bit: random number
-type ID [byteLength]byte
+type ID [Size]byte
 
 // NewID returns a ID with the provided arguments.
 func NewID(t time.Time, workerID WorkerID, seq uint32, randomBytes []byte) ID {
@@ -88,7 +88,7 @@ func Parse(str string) (ID, error) {
 }
 
 func FromBytes(b []byte) (ID, error) {
-	if len(b) != byteLength {
+	if len(b) != Size {
 		return Nil, ErrInvalidBytesLength
 	}
 
