@@ -204,3 +204,7 @@ func (d *ID) Unmarshal(b []byte) error {
 
 	return nil
 }
+
+func (d ID) Bytes() []byte {
+	return d[:]
+}
