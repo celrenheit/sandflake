@@ -84,7 +84,7 @@ type mockClock time.Time
 func (t mockClock) Now() time.Time { return time.Time(t) }
 
 func generateRandomBytes(unsafereader io.Reader) []byte {
-	randomBytes := make([]byte, 0, randomLength)
+	randomBytes := make([]byte, randomLength)
 	// try crypto rand reader
 	if _, err := securerandom.Read(randomBytes[:]); err != nil {
 		// otherwise fallback to math/crypto reader
