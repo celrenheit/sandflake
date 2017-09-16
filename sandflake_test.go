@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"fmt"
 	"math/rand"
+	"strconv"
 
 	"testing"
 	"time"
@@ -85,17 +86,19 @@ func TestClockSequences(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
-		var id ID
-		g := Generator{}
-		if !test.startTime.IsZero() {
-			g.lastTime = test.startTime
-		}
-		for _, t := range test.times {
-			g.clock = mockClock(t)
-			id = g.Next()
-		}
-		require.Equal(t, test.expectedLastSequence, int(id.Sequence()))
+	for i, test := range tests {
+		t.Run("test #"+strconv.Itoa(i), func(t *testing.T) {
+			var id ID
+			g := Generator{}
+			if !test.startTime.IsZero() {
+				g.lastTime = test.startTime
+			}
+			for _, t := range test.times {
+				g.clock = mockClock(t)
+				id = g.Next()
+			}
+			require.Equal(t, test.expectedLastSequence, int(id.Sequence()))
+		})
 	}
 }
 
@@ -106,6 +109,24 @@ func TestOrdering(t *testing.T) {
 
 	require.Equal(t, 1, bytes.Compare(d2[:], d1[:]))
 	require.True(t, d1.String() < d2.String()) // lexically sortable
+}
+
+func TestColision(t *testing.T) {
+	var g Generator
+	history := map[int64]map[uint32]ID{}
+
+	for i := 0; i < 1e6; i++ {
+		id := g.Next()
+		ms := id.Time().UnixNano() / timeUnit
+		seq := id.Sequence()
+		if _, ok := history[ms]; !ok {
+			history[ms] = make(map[uint32]ID)
+		}
+
+		last, ok := history[ms][seq]
+		require.False(t, ok, "last: %v current: %v", last, id)
+		history[ms][seq] = id
+	}
 }
 
 func BenchmarkNext(b *testing.B) {

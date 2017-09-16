@@ -47,10 +47,10 @@ func (g *Generator) Next() ID {
 		}
 	})
 
-	now := g.clock.Now().UTC()
 	g.mu.Lock()
+	now := g.clock.Now().UTC()
 
-	if sub := now.Sub(g.lastTime); sub >= 0 && sub < time.Millisecond {
+	if now.UnixNano()/timeUnit == g.lastTime.UnixNano()/timeUnit {
 		g.sequence++
 	} else {
 		g.lastTime = now
