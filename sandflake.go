@@ -19,7 +19,9 @@ package sandflake
 
 import (
 	"bytes"
+	"encoding"
 	"encoding/base32"
+	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -55,7 +57,7 @@ var (
 	ErrInvalidBytesLength = fmt.Errorf("expected length of bytes to be %d", Size)
 
 	// encoding
-	encoding     = base32.NewEncoding(alphabet)
+	encoder      = base32.NewEncoding(alphabet)
 	paddingBytes = bytes.Repeat([]byte{'='}, padding)
 )
 
@@ -122,7 +124,7 @@ func (id ID) String() string {
 
 func (d ID) MarshalText() ([]byte, error) {
 	dst := make([]byte, encodedLen+padding)
-	encoding.Encode(dst, d[:])
+	encoder.Encode(dst, d[:])
 	return dst[:encodedLen], nil
 }
 
@@ -132,7 +134,7 @@ func (d *ID) UnmarshalText(b []byte) error {
 	}
 
 	dst := make([]byte, encodedLen)
-	if _, err := encoding.Decode(dst, append(b, paddingBytes...)); err != nil {
+	if _, err := encoder.Decode(dst, append(b, paddingBytes...)); err != nil {
 		return err
 	}
 
@@ -223,6 +225,33 @@ func (d *ID) Unmarshal(b []byte) error {
 	return nil
 }
 
+func (d ID) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + d.String() + `"`), nil
+}
+
+func (d *ID) UnmarshalJSON(b []byte) error {
+	if len(b) > 1 && b[0] == '"' && b[len(b)-1] == '"' {
+		b = bytes.Trim(b, `"`)
+		id, err := Parse(string(b))
+		if err != nil {
+			return err
+		}
+
+		*d = id
+
+		return nil
+	}
+
+	return fmt.Errorf("invalid json input: '%v'", b)
+}
+
 func (d ID) Bytes() []byte {
 	return d[:]
 }
+
+var (
+	_ encoding.TextMarshaler   = ID{}
+	_ encoding.TextUnmarshaler = (*ID)(nil)
+	_ json.Marshaler           = ID{}
+	_ json.Unmarshaler         = (*ID)(nil)
+)
