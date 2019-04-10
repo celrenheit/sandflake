@@ -124,10 +124,18 @@ func (t mockClock) Now() time.Time { return time.Time(t) }
 func generateRandomBytes(unsafereader io.Reader) []byte {
 	randomBytes := make([]byte, randomLength)
 	// try crypto rand reader
-	if _, err := securerandom.Read(randomBytes[:]); err != nil {
+	if _, err := io.ReadFull(securerandom.Reader, randomBytes); err != nil {
 		// otherwise fallback to math/crypto reader
-		unsafereader.Read(randomBytes[:])
+		io.ReadFull(unsafeReader, randomBytes)
 	}
 
 	return randomBytes
+}
+
+var unsafeReader = unsaferandomReader{}
+
+type unsaferandomReader struct{}
+
+func (_ unsaferandomReader) Read(p []byte) (int, error) {
+	return unsaferandom.Read(p)
 }
